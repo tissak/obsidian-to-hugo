@@ -19,15 +19,18 @@ class ObsidianToHugo:
         hugo_content_dir: str,
         processors: list = None,
         filters: list = None,
+        skip_folders: list = [],
     ) -> None:
         self.obsidian_vault_dir = obsidian_vault_dir
         self.hugo_content_dir = hugo_content_dir
         self.processors = [replace_wiki_links, replace_md_marks]
         self.filters = []
+        self.skip_folders = ['.obsidian'] + skip_folders
         if processors:
             self.processors.extend(processors)
         if filters:
             self.filters.extend(filters)
+        
 
     def run(self) -> None:
         """
@@ -49,8 +52,13 @@ class ObsidianToHugo:
     def copy_obsidian_vault_to_hugo_content_dir(self) -> None:
         """
         Copy all files and directories from the obsidian vault to the hugo content directory.
-        """
-        copytree(self.obsidian_vault_dir, self.hugo_content_dir, ignore=ignore_patterns('.obsidian'))
+        """        
+        for item in os.listdir(self.obsidian_vault_dir):
+            s = os.path.join(self.obsidian_vault_dir, item)
+            d = os.path.join(self.hugo_content_dir, item)
+            if os.path.isdir(s) and item not in self.skip_folders:
+                copytree(s, d, False, None)
+
 
     def process_content(self) -> None:
         """
